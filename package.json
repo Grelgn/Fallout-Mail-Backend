@@ -11,8 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^6.1.0",
+    "@quixo3/prisma-session-store": "^3.1.13",
     "bcryptjs": "^2.4.3",
-    "body-parser": "^1.20.3",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-async-handler": "^1.2.0",
