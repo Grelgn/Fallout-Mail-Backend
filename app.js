@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const indexRouter = require("./routes/indexRouter");
 require("dotenv").config();
+const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const session = require("express-session");
 const { PrismaClient } = require("@prisma/client");
@@ -12,6 +13,7 @@ const prisma = require("./prismaClient");
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
