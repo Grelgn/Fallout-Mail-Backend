@@ -86,7 +86,7 @@ const userLogIn = (req, res, next) => {
 				message: info?.message || "Invalid credentials",
 			});
 		}
-		req.logIn(user, (err) => {
+		req.logIn(user, async (err) => {
 			if (err) {
 				return res.status(500).json({
 					success: false,
@@ -94,12 +94,21 @@ const userLogIn = (req, res, next) => {
 					error: err,
 				});
 			}
+			// Get list of users
+			const userList = await prisma.user.findMany({
+				select: {
+					username: true,
+					signUpDate: true,
+				},
+			});
+
 			// Excluding the password
 			const { password, ...userData } = user;
 			return res.status(200).json({
 				success: true,
 				message: "Login successful",
 				user: userData,
+				userList: userList,
 			});
 		});
 	})(req, res, next);
