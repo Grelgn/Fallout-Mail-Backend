@@ -43,6 +43,26 @@ passport.use(
 				where: {
 					username: username,
 				},
+				include: {
+					messagesReceived: {
+						include: {
+							sender: {
+								select: {
+									username: true,
+								},
+							},
+						},
+					},
+					messagesSent: {
+						include: {
+							receiver: {
+								select: {
+									username: true,
+								},
+							},
+						},
+					},
+				},
 			});
 			if (!user) {
 				return done(null, false, { message: "Incorrect username" });

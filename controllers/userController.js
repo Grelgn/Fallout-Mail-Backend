@@ -94,13 +94,12 @@ const userLogIn = (req, res, next) => {
 					error: err,
 				});
 			}
+			// Excluding the password
+			const { password, ...userData } = user;
 			return res.status(200).json({
 				success: true,
 				message: "Login successful",
-				user: {
-					id: user.id,
-					username: user.username,
-				},
+				user: userData,
 			});
 		});
 	})(req, res, next);
