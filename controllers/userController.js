@@ -10,23 +10,23 @@ const userSignUp = [
 		.trim()
 		.notEmpty()
 		.escape()
-		.withMessage("Username must be specified.")
+		.withMessage("Username must be specified")
 		.isLength({ max: 25 })
-		.withMessage("Username can't be more than 25 characters."),
+		.withMessage("Username can't be more than 25 characters"),
 	body("password")
 		.trim()
 		.notEmpty()
 		.escape()
-		.withMessage("Password must be specified.")
+		.withMessage("Password must be specified")
 		.isLength({ max: 25 })
-		.withMessage("Password can't be more than 25 characters."),
+		.withMessage("Password can't be more than 25 characters"),
 	body("confirm")
 		.trim()
 		.custom((value, { req }) => {
 			return value === req.body.password;
 		})
 		.escape()
-		.withMessage("Passwords do not match."),
+		.withMessage("Passwords do not match"),
 
 	asyncHandler(async (req, res, next) => {
 		const result = validationResult(req);
@@ -60,7 +60,7 @@ const userSignUp = [
 						if (e instanceof Prisma.PrismaClientKnownRequestError) {
 							if (e.code === "P2002") {
 								res.json({
-									message: `Username already exists`,
+									message: `User already exists`,
 								});
 							}
 						}
@@ -97,6 +97,7 @@ const userLogIn = (req, res, next) => {
 			// Get list of users
 			const userList = await prisma.user.findMany({
 				select: {
+					id: true,
 					username: true,
 					signUpDate: true,
 				},
