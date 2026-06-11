@@ -5,7 +5,6 @@ require("dotenv").config();
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const session = require("express-session");
-const { PrismaClient } = require("@prisma/client");
 const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
@@ -13,7 +12,17 @@ const prisma = require("./prismaClient");
 
 const app = express();
 
-app.use(cors());
+app.set("trust proxy", 1);
+
+app.use(
+	cors({
+		origin: [
+			"https://fallout-mail.31.97.179.20.sslip.io",
+			"http://localhost:5173",
+		],
+		credentials: true,
+	})
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -21,11 +30,13 @@ app.use(
 	session({
 		cookie: {
 			maxAge: 7 * 24 * 60 * 60 * 1000, // ms
+			sameSite: "none",
+			secure: true,
 		},
 		secret: process.env.SECRET,
 		resave: false,
 		saveUninitialized: false,
-		store: new PrismaSessionStore(new PrismaClient(), {
+		store: new PrismaSessionStore(prisma, {
 			checkPeriod: 2 * 60 * 1000, //ms
 			dbRecordIdIsSessionId: true,
 			dbRecordIdFunction: undefined,
@@ -106,6 +117,3 @@ app.listen(PORT, () =>
 	console.log(`My first Express app - listening on port ${PORT}!`)
 );
 
-module.exports = {
-	prisma,
-};
