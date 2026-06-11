@@ -6,24 +6,24 @@ const sendMessage = [
 	body("receiver")
 		.trim()
 		.notEmpty()
-		.escape()
 		.withMessage("Receiver must be specified")
 		.isLength({ max: 25 })
-		.withMessage("Receiver name can't be more than 25 characters"),
+		.withMessage("Receiver name can't be more than 25 characters")
+		.escape(),
 	body("title")
 		.trim()
 		.notEmpty()
-		.escape()
 		.withMessage("Title must be specified")
 		.isLength({ max: 50 })
-		.withMessage("Title can't be more than 50 characters"),
+		.withMessage("Title can't be more than 50 characters")
+		.escape(),
 	body("body")
 		.trim()
 		.notEmpty()
-		.escape()
 		.withMessage("Message must be specified")
 		.isLength({ max: 400 })
-		.withMessage("Message can't be more than 400 characters"),
+		.withMessage("Message can't be more than 400 characters")
+		.escape(),
 
 	asyncHandler(async (req, res, next) => {
 		const result = validationResult(req);
@@ -34,7 +34,7 @@ const sendMessage = [
 				errors: result.array(),
 			});
 		}
-		const receiver = await prisma.user.findFirst({
+		const receiver = await prisma.user.findUnique({
 			where: {
 				username: req.body.receiver,
 			},
@@ -65,7 +65,7 @@ const sendMessage = [
 ];
 
 const getMessages = asyncHandler(async (req, res) => {
-	const user = await prisma.user.findFirst({
+	const user = await prisma.user.findUnique({
 		where: {
 			id: req.user.id,
 		},
@@ -90,6 +90,9 @@ const getMessages = asyncHandler(async (req, res) => {
 			},
 		},
 	});
+	if (!user) {
+		return res.status(401).json({ success: false, message: "Not logged in" });
+	}
 	return res.status(200).json({
 		success: true,
 		messagesReceived: user.messagesReceived,
