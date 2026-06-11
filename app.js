@@ -19,6 +19,7 @@ app.use(
 		origin: [
 			"https://fallout-mail.31.97.179.20.sslip.io",
 			"http://localhost:5173",
+			"http://localhost:5174",
 		],
 		credentials: true,
 	})
