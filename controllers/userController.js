@@ -20,8 +20,7 @@ const userSignUp = [
 		.isLength({ min: 8 })
 		.withMessage("Password must be at least 8 characters")
 		.isLength({ max: 25 })
-		.withMessage("Password can't be more than 25 characters")
-		.escape(),
+		.withMessage("Password can't be more than 25 characters"),
 	body("confirm")
 		.trim()
 		.custom((value, { req }) => {
@@ -32,11 +31,11 @@ const userSignUp = [
 
 	asyncHandler(async (req, res, next) => {
 		const result = validationResult(req);
-		if (result.errors.length > 0) {
+		if (!result.isEmpty()) {
 			return res.status(400).json({
 				success: false,
 				message: "Validation failed",
-				errors: result.errors,
+				errors: result.array(),
 			});
 		}
 		try {
@@ -121,8 +120,13 @@ const userLogOut = (req, res, next) => {
 				.status(500)
 				.json({ success: false, message: "Error logging out" });
 		}
-		req.session.destroy(() => {
-			res.clearCookie("connect.sid");
+		req.session.destroy((err) => {
+			if (err) {
+				return res
+					.status(500)
+					.json({ success: false, message: "Error logging out" });
+			}
+			res.clearCookie("connect.sid", { sameSite: "none", secure: true });
 			return res.status(200).json({ success: true, message: "Logged out" });
 		});
 	});
