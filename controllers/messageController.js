@@ -27,45 +27,77 @@ const sendMessage = [
 
 	asyncHandler(async (req, res, next) => {
 		const result = validationResult(req);
-		if (result.errors.length > 0) {
+		if (!result.isEmpty()) {
 			return res.status(400).json({
 				success: false,
 				message: "Validation failed",
-				errors: result.errors,
+				errors: result.array(),
 			});
-		} else {
-			try {
-				receiver = await prisma.user.findFirst({
-					where: {
-						username: req.body.receiver,
-					},
-					select: {
-						id: true,
-					},
-				});
-				const message = await prisma.message.create({
-					data: {
-						senderId: req.body.sender,
-						receiverId: receiver.id,
-						title: req.body.title,
-						body: req.body.body,
-					},
-				});
-				return res.status(201).json({
-					success: true,
-					message: "Message sent",
-					data: message,
-				});
-			} catch {
-				return res.status(400).json({
-					success: false,
-					message: "User does not exist",
-				});
-			}
 		}
+		const receiver = await prisma.user.findFirst({
+			where: {
+				username: req.body.receiver,
+			},
+			select: {
+				id: true,
+			},
+		});
+		if (!receiver) {
+			return res.status(400).json({
+				success: false,
+				message: "User does not exist",
+			});
+		}
+		const message = await prisma.message.create({
+			data: {
+				senderId: req.user.id,
+				receiverId: receiver.id,
+				title: req.body.title,
+				body: req.body.body,
+			},
+		});
+		return res.status(201).json({
+			success: true,
+			message: "Message sent",
+			data: message,
+		});
 	}),
 ];
 
+const getMessages = asyncHandler(async (req, res) => {
+	const user = await prisma.user.findFirst({
+		where: {
+			id: req.user.id,
+		},
+		select: {
+			messagesReceived: {
+				include: {
+					sender: {
+						select: {
+							username: true,
+						},
+					},
+				},
+			},
+			messagesSent: {
+				include: {
+					receiver: {
+						select: {
+							username: true,
+						},
+					},
+				},
+			},
+		},
+	});
+	return res.status(200).json({
+		success: true,
+		messagesReceived: user.messagesReceived,
+		messagesSent: user.messagesSent,
+	});
+});
+
 module.exports = {
 	sendMessage,
+	getMessages,
 };
