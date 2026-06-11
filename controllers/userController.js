@@ -9,24 +9,26 @@ const userSignUp = [
 	body("username")
 		.trim()
 		.notEmpty()
-		.escape()
 		.withMessage("Username must be specified")
 		.isLength({ max: 25 })
-		.withMessage("Username can't be more than 25 characters"),
+		.withMessage("Username can't be more than 25 characters")
+		.escape(),
 	body("password")
 		.trim()
 		.notEmpty()
-		.escape()
 		.withMessage("Password must be specified")
+		.isLength({ min: 8 })
+		.withMessage("Password must be at least 8 characters")
 		.isLength({ max: 25 })
-		.withMessage("Password can't be more than 25 characters"),
+		.withMessage("Password can't be more than 25 characters")
+		.escape(),
 	body("confirm")
 		.trim()
 		.custom((value, { req }) => {
 			return value === req.body.password;
 		})
-		.escape()
-		.withMessage("Passwords do not match"),
+		.withMessage("Passwords do not match")
+		.escape(),
 
 	asyncHandler(async (req, res, next) => {
 		const result = validationResult(req);
@@ -36,36 +38,33 @@ const userSignUp = [
 				message: "Validation failed",
 				errors: result.errors,
 			});
-		} else {
-			bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
-				if (err) {
-					return res.status(500).json({
-						success: false,
-						message: "Error creating user",
-					});
-				} else {
-					try {
-						const user = await prisma.user.create({
-							data: {
-								username: req.body.username,
-								password: hashedPassword,
-							},
-						});
-						return res.status(201).json({
-							success: true,
-							message: "User created successfully",
-							userId: user.id,
-						});
-					} catch (e) {
-						if (e instanceof Prisma.PrismaClientKnownRequestError) {
-							if (e.code === "P2002") {
-								res.json({
-									message: `User already exists`,
-								});
-							}
-						}
-					}
-				}
+		}
+		try {
+			const hashedPassword = await bcrypt.hash(req.body.password, 10);
+			const user = await prisma.user.create({
+				data: {
+					username: req.body.username,
+					password: hashedPassword,
+				},
+			});
+			return res.status(201).json({
+				success: true,
+				message: "User created successfully",
+				userId: user.id,
+			});
+		} catch (e) {
+			if (
+				e instanceof Prisma.PrismaClientKnownRequestError &&
+				e.code === "P2002"
+			) {
+				return res.status(400).json({
+					success: false,
+					message: "User already exists",
+				});
+			}
+			return res.status(500).json({
+				success: false,
+				message: "Error creating user",
 			});
 		}
 	}),
@@ -115,7 +114,22 @@ const userLogIn = (req, res, next) => {
 	})(req, res, next);
 };
 
+const userLogOut = (req, res, next) => {
+	req.logout((err) => {
+		if (err) {
+			return res
+				.status(500)
+				.json({ success: false, message: "Error logging out" });
+		}
+		req.session.destroy(() => {
+			res.clearCookie("connect.sid");
+			return res.status(200).json({ success: true, message: "Logged out" });
+		});
+	});
+};
+
 module.exports = {
 	userSignUp,
 	userLogIn,
+	userLogOut,
 };
