@@ -17,6 +17,7 @@ app.set("trust proxy", 1);
 app.use(
 	cors({
 		origin: [
+			"https://fallout-mail.grelgn.com",
 			"https://fallout-mail.31.97.179.20.sslip.io",
 			"http://localhost:5173",
 			"http://localhost:5174",
