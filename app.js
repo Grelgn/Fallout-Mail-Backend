@@ -114,8 +114,13 @@ passport.deserializeUser(async (id, done) => {
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-	console.log(`My first Express app - listening on port ${PORT}!`)
-);
+// On Vercel the exported app is invoked as a function; only listen elsewhere
+if (!process.env.VERCEL) {
+	const PORT = process.env.PORT || 3000;
+	app.listen(PORT, () =>
+		console.log(`My first Express app - listening on port ${PORT}!`)
+	);
+}
+
+module.exports = app;
 
